@@ -10,3 +10,7 @@ type Expense struct {
 	Sum     float32
 	Comment string
 }
+
+func Create(date time.Time, sum float32, comment string) Expense {
+	return Expense{Date: date.Truncate(time.Second), Sum: sum, Comment: comment}
+}

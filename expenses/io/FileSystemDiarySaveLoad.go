@@ -10,8 +10,11 @@ import (
 	"time"
 )
 
+const DefaultDateFormat = time.RFC3339Nano
+
 type FileSystemDiarySaveLoad struct {
-	Path string
+	Path       string
+	DateFormat string
 }
 
 func (f FileSystemDiarySaveLoad) Save(d *expenses.Diary) {
@@ -20,8 +23,13 @@ func (f FileSystemDiarySaveLoad) Save(d *expenses.Diary) {
 		panic(err)
 	}
 
+	dateFormat := DefaultDateFormat
+	if len(f.DateFormat) > 0 {
+		dateFormat = f.DateFormat
+	}
+
 	for e := d.Entries.Front(); e != nil; e = e.Next() {
-		buf := fmt.Sprintln(e.Value.(expenses.Expense).Date.Format(time.RFC1123))
+		buf := fmt.Sprintln(e.Value.(expenses.Expense).Date.Format(dateFormat))
 		buf += fmt.Sprintln(e.Value.(expenses.Expense).Sum)
 		buf += fmt.Sprintln(e.Value.(expenses.Expense).Comment)
 		if e.Next() != nil {
@@ -42,12 +50,19 @@ func (f FileSystemDiarySaveLoad) Load() *expenses.Diary {
 		panic(err)
 	}
 
+	dateFormat := DefaultDateFormat
+	if len(f.DateFormat) > 0 {
+		dateFormat = f.DateFormat
+	}
+
 	scanner := bufio.NewScanner(file)
 	entries := new(list.List)
-	var entry *expenses.Expense
 	for scanner.Scan() {
-		entry = new(expenses.Expense)
-		entry.Date, err = time.Parse(time.RFC1123, scanner.Text())
+		var date time.Time
+		var sum float32
+		var comment string
+
+		date, err = time.Parse(dateFormat, scanner.Text())
 		if err != nil {
 			panic(err)
 		}
@@ -56,11 +71,11 @@ func (f FileSystemDiarySaveLoad) Load() *expenses.Diary {
 		if err2 != nil {
 			panic(err2)
 		}
-		entry.Sum = float32(buf)
+		sum = float32(buf)
 		scanner.Scan()
-		entry.Comment = scanner.Text()
-		entries.PushBack(*entry)
-		entry = nil
+		comment = scanner.Text()
+		entry := expenses.Create(date, sum, comment)
+		entries.PushBack(entry)
 		scanner.Scan() // empty line
 	}
 

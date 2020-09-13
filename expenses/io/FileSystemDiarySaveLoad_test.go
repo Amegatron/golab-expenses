@@ -25,7 +25,7 @@ func TestConsistentSaveLoad(t *testing.T) {
 		_e := e.Value.(expenses.Expense)
 		_e2 := e2.Value.(expenses.Expense)
 
-		if _e.Date.Truncate(time.Second) != _e2.Date.Truncate(time.Second) {
+		if _e.Date != _e2.Date {
 			t.Errorf("Data mismatch for entry %d for the 'Date' field: expected %s, got %s", i, _e.Date.String(), _e2.Date.String())
 		}
 		if _e.Sum != _e2.Sum {
@@ -48,25 +48,11 @@ func getSampleDiary() *expenses.Diary {
 
 	var expense expenses.Expense
 
-	expense = expenses.Expense{
-		Date:    time.Now(),
-		Sum:     rand.Float32() * 100,
-		Comment: "First expense",
-	}
+	expense = expenses.Create(time.Now(), rand.Float32()*100, "First expense")
 	testList.PushBack(expense)
-
-	expense = expenses.Expense{
-		Date:    time.Now(),
-		Sum:     rand.Float32() * 50,
-		Comment: "Second expense",
-	}
+	expense = expenses.Create(time.Now(), rand.Float32()*50, "Second expense")
 	testList.PushBack(expense)
-
-	expense = expenses.Expense{
-		Date:    time.Now(),
-		Sum:     rand.Float32() * 300,
-		Comment: "Third expense",
-	}
+	expense = expenses.Create(time.Now(), rand.Float32()*300, "Third expense")
 	testList.PushBack(expense)
 
 	d := new(expenses.Diary)
